@@ -11,10 +11,7 @@
             margin: 20px;
         }
         .youtube-audio-player {
-            width: 0;
-            height: 0;
-            overflow: hidden;
-            opacity: 0;
+            display: none; /* Menyembunyikan player */
         }
         ul {
             list-style-type: none;
@@ -37,18 +34,68 @@
     <h1>YouTube Audio Player</h1>
     <ul id="video-list"></ul>
 
+    <!-- Div untuk YouTube Player -->
     <div class="youtube-audio-player">
-        <iframe id="ytplayer" type="text/html" width="0" height="0"
-                src="" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+        <div id="ytplayer"></div>
     </div>
 
+    <!-- Load YouTube IFrame API -->
+    <script src="https://www.youtube.com/iframe_api"></script>
     <script>
+        let player;
+        let videos = [];
+        let currentIndex = 0;
+
+        // Memuat YouTube IFrame API
+        function onYouTubeIframeAPIReady() {
+            // Player akan diinisialisasi saat hash URL berubah
+        }
+
+        // Fungsi untuk memutar video YouTube
+        function playVideo(videoId) {
+            if (player) {
+                player.loadVideoById(videoId);
+                player.playVideo();
+            } else {
+                player = new YT.Player('ytplayer', {
+                    height: '0',
+                    width: '0',
+                    videoId: videoId,
+                    playerVars: {
+                        'autoplay': 1,
+                        'controls': 0,
+                        'modestbranding': 1,
+                        'rel': 0,
+                        'showinfo': 0
+                    },
+                    events: {
+                        'onReady': function(event) {
+                            event.target.playVideo();
+                        },
+                        'onStateChange': function(event) {
+                            if (event.data === YT.PlayerState.ENDED) {
+                                playNextVideo();
+                            }
+                        }
+                    }
+                });
+            }
+        }
+
+        // Fungsi untuk memutar video berikutnya
+        function playNextVideo() {
+            currentIndex = (currentIndex + 1) % videos.length;
+            const nextVideo = videos[currentIndex];
+            playVideo(nextVideo.id);
+            window.location.hash = nextVideo.hash; // Update hash URL
+        }
+
         // Fungsi untuk memuat tautan dari links.json
         fetch('links.json')
             .then(response => response.json())
             .then(data => {
                 const videoList = document.getElementById('video-list');
-                const videos = data.videos;
+                videos = data.videos;
 
                 // Membuat daftar tautan berdasarkan links.json
                 videos.forEach(video => {
@@ -58,6 +105,7 @@
                     link.textContent = video.name;
                     link.addEventListener('click', function(e) {
                         e.preventDefault();
+                        currentIndex = videos.findIndex(v => v.hash === video.hash);
                         playVideo(video.id);
                     });
                     listItem.appendChild(link);
@@ -69,6 +117,7 @@
                 if (currentHash) {
                     const video = videos.find(v => v.hash === currentHash);
                     if (video) {
+                        currentIndex = videos.indexOf(video);
                         playVideo(video.id);
                     }
                 }
@@ -78,17 +127,11 @@
                     const newHash = window.location.hash;
                     const video = videos.find(v => v.hash === newHash);
                     if (video) {
+                        currentIndex = videos.indexOf(video);
                         playVideo(video.id);
                     }
                 });
             });
-
-        // Fungsi untuk memutar video YouTube
-        function playVideo(videoId) {
-            const player = document.getElementById('ytplayer');
-            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
-        }
     </script>
 </body>
-  </html>
-  
+</html>
