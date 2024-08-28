@@ -42,18 +42,15 @@
             background-color: #007BFF;
             border-radius: 10px;
         }
-        #skip-ad-button {
-            display: none; /* Awalnya tersembunyi */
+        #skip-ad-btn {
             margin-top: 20px;
             padding: 10px 20px;
             background-color: #FF0000;
-            color: #FFFFFF;
+            color: #fff;
             border: none;
             border-radius: 5px;
             cursor: pointer;
-        }
-        #skip-ad-button:hover {
-            background-color: #CC0000;
+            display: none; /* Sembunyikan tombol secara default */
         }
     </style>
 </head>
@@ -65,8 +62,7 @@
         <div id="progress-bar"></div>
     </div>
 
-    <!-- Tombol Skip Ad -->
-    <button id="skip-ad-button" onclick="skipAdManually()">Skip Ads</button>
+    <button id="skip-ad-btn">Skip Ad</button>
 
     <!-- Div untuk YouTube Player -->
     <div class="youtube-audio-player">
@@ -80,6 +76,7 @@
         let videos = [];
         let currentIndex = 0;
         let progressBarInterval;
+        let skipAdBtn = document.getElementById('skip-ad-btn');
 
         // Memuat YouTube IFrame API
         function onYouTubeIframeAPIReady() {
@@ -117,14 +114,37 @@
                         'onReady': function(event) {
                             event.target.playVideo();
                             startProgressBar();
+                            monitorAd();
                         },
                         'onStateChange': function(event) {
-                            handleStateChange(event);
+                            if (event.data === YT.PlayerState.ENDED) {
+                                playNextVideo();
+                            }
                         }
                     }
                 });
             }
             startProgressBar();
+        }
+
+        // Fungsi untuk memonitor iklan dan mencoba men-skip iklan
+        function monitorAd() {
+            const checkAdInterval = setInterval(() => {
+                const skipButton = document.querySelector('.ytp-ad-skip-button');
+
+                if (skipButton) {
+                    skipButton.click(); // Klik tombol "Skip Ad" jika ada
+                    clearInterval(checkAdInterval); // Hentikan pengecekan setelah tombol ditemukan dan diklik
+                }
+            }, 500); // Cek setiap 0,5 detik
+
+            skipAdBtn.style.display = 'block'; // Tampilkan tombol skip ad manual
+            skipAdBtn.onclick = () => {
+                const skipButton = document.querySelector('.ytp-ad-skip-button');
+                if (skipButton) {
+                    skipButton.click();
+                }
+            };
         }
 
         // Fungsi untuk memulai progres bar
@@ -135,33 +155,12 @@
             progressBarInterval = setInterval(updateProgressBar, 1000);
         }
 
-        // Fungsi untuk menangani perubahan status player
-        function handleStateChange(event) {
-            if (event.data === YT.PlayerState.ENDED) {
-                playNextVideo();
-            }
-        }
-
         // Fungsi untuk memutar video berikutnya
         function playNextVideo() {
             currentIndex = (currentIndex + 1) % videos.length;
             const nextVideo = videos[currentIndex];
             playVideo(nextVideo.id);
             window.location.hash = nextVideo.hash; // Update hash URL
-        }
-
-        // Fungsi untuk mencoba mengklik tombol "Skip Ad"
-        function attemptSkipAd() {
-            const skipButton = document.querySelector('.ytp-ad-skip-button');
-            if (skipButton) {
-                skipButton.click();
-                document.getElementById('skip-ad-button').style.display = 'none'; // Sembunyikan tombol Skip Ad
-            }
-        }
-
-        // Fungsi untuk skip ad secara manual
-        function skipAdManually() {
-            attemptSkipAd();
         }
 
         // Fungsi untuk memuat tautan dari links.json
