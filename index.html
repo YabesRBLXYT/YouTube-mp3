@@ -11,7 +11,21 @@
             margin: 20px;
         }
         .youtube-audio-player {
-            display: none; /* Menyembunyikan player */
+            position: relative;
+            overflow: hidden;
+            width: 100px;  /* Lebar krop */
+            height: 30px;  /* Tinggi krop */
+            margin: 20px auto;
+            border-radius: 5px;
+            box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
+        }
+        #ytplayer {
+            position: absolute;
+            top: -440px; /* Atur posisi Y untuk menampilkan tombol skip ad */
+            left: -500px; /* Atur posisi X untuk menampilkan tombol skip ad */
+            width: 1280px;  /* Lebar asli video */
+            height: 720px;  /* Tinggi asli video */
+            border: none;
         }
         ul {
             list-style-type: none;
@@ -42,16 +56,6 @@
             background-color: #007BFF;
             border-radius: 10px;
         }
-        #skip-ad-btn {
-            margin-top: 20px;
-            padding: 10px 20px;
-            background-color: #FF0000;
-            color: #fff;
-            border: none;
-            border-radius: 5px;
-            cursor: pointer;
-            display: none; /* Sembunyikan tombol secara default */
-        }
     </style>
 </head>
 <body>
@@ -61,8 +65,6 @@
     <div id="progress-bar-container">
         <div id="progress-bar"></div>
     </div>
-
-    <button id="skip-ad-btn">Skip Ad</button>
 
     <!-- Div untuk YouTube Player -->
     <div class="youtube-audio-player">
@@ -76,7 +78,6 @@
         let videos = [];
         let currentIndex = 0;
         let progressBarInterval;
-        let skipAdBtn = document.getElementById('skip-ad-btn');
 
         // Memuat YouTube IFrame API
         function onYouTubeIframeAPIReady() {
@@ -100,8 +101,6 @@
                 player.playVideo();
             } else {
                 player = new YT.Player('ytplayer', {
-                    height: '0',
-                    width: '0',
                     videoId: videoId,
                     playerVars: {
                         'autoplay': 1,
@@ -114,37 +113,14 @@
                         'onReady': function(event) {
                             event.target.playVideo();
                             startProgressBar();
-                            monitorAd();
                         },
                         'onStateChange': function(event) {
-                            if (event.data === YT.PlayerState.ENDED) {
-                                playNextVideo();
-                            }
+                            handleStateChange(event);
                         }
                     }
                 });
             }
             startProgressBar();
-        }
-
-        // Fungsi untuk memonitor iklan dan mencoba men-skip iklan
-        function monitorAd() {
-            const checkAdInterval = setInterval(() => {
-                const skipButton = document.querySelector('.ytp-ad-skip-button');
-
-                if (skipButton) {
-                    skipButton.click(); // Klik tombol "Skip Ad" jika ada
-                    clearInterval(checkAdInterval); // Hentikan pengecekan setelah tombol ditemukan dan diklik
-                }
-            }, 500); // Cek setiap 0,5 detik
-
-            skipAdBtn.style.display = 'block'; // Tampilkan tombol skip ad manual
-            skipAdBtn.onclick = () => {
-                const skipButton = document.querySelector('.ytp-ad-skip-button');
-                if (skipButton) {
-                    skipButton.click();
-                }
-            };
         }
 
         // Fungsi untuk memulai progres bar
@@ -153,6 +129,13 @@
                 clearInterval(progressBarInterval);
             }
             progressBarInterval = setInterval(updateProgressBar, 1000);
+        }
+
+        // Fungsi untuk menangani perubahan status player
+        function handleStateChange(event) {
+            if (event.data === YT.PlayerState.ENDED) {
+                playNextVideo();
+            }
         }
 
         // Fungsi untuk memutar video berikutnya
