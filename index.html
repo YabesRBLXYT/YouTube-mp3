@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YouTube Audio Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 20px;
+        }
+        .youtube-audio-player {
+            width: 0;
+            height: 0;
+            overflow: hidden;
+            opacity: 0;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin: 10px 0;
+        }
+        a {
+            text-decoration: none;
+            color: #007BFF;
+            font-weight: bold;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h1>YouTube Audio Player</h1>
+    <ul id="video-list"></ul>
+
+    <div class="youtube-audio-player">
+        <iframe id="ytplayer" type="text/html" width="0" height="0"
+                src="" frameborder="0" allow="autoplay; encrypted-media"></iframe>
+    </div>
+
+    <script>
+        // Fungsi untuk memuat tautan dari links.json
+        fetch('links.json')
+            .then(response => response.json())
+            .then(data => {
+                const videoList = document.getElementById('video-list');
+                const videos = data.videos;
+
+                // Membuat daftar tautan berdasarkan links.json
+                videos.forEach(video => {
+                    const listItem = document.createElement('li');
+                    const link = document.createElement('a');
+                    link.href = video.hash;
+                    link.textContent = video.name;
+                    link.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        playVideo(video.id);
+                    });
+                    listItem.appendChild(link);
+                    videoList.appendChild(listItem);
+                });
+
+                // Memeriksa hash saat halaman dimuat
+                const currentHash = window.location.hash;
+                if (currentHash) {
+                    const video = videos.find(v => v.hash === currentHash);
+                    if (video) {
+                        playVideo(video.id);
+                    }
+                }
+
+                // Memeriksa hash saat berubah
+                window.addEventListener('hashchange', () => {
+                    const newHash = window.location.hash;
+                    const video = videos.find(v => v.hash === newHash);
+                    if (video) {
+                        playVideo(video.id);
+                    }
+                });
+            });
+
+        // Fungsi untuk memutar video YouTube
+        function playVideo(videoId) {
+            const player = document.getElementById('ytplayer');
+            player.src = `https://www.youtube.com/embed/${videoId}?autoplay=1`;
+        }
+    </script>
+</body>
+  </html>
+  
