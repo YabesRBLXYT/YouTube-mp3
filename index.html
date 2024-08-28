@@ -139,10 +139,6 @@
         function handleStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
                 playNextVideo();
-            } else if (event.data === YT.PlayerState.PLAYING) {
-                unmuteIfAdIsSkipped();
-            } else if (event.data === YT.PlayerState.UNSTARTED || event.data === YT.PlayerState.CUED) {
-                checkIfAdIsPlaying();
             }
         }
 
@@ -154,40 +150,11 @@
             window.location.hash = nextVideo.hash; // Update hash URL
         }
 
-        // Fungsi untuk mengecek apakah iklan sedang diputar
-        function checkIfAdIsPlaying() {
-            const adCheckInterval = setInterval(() => {
-                const currentTime = player.getCurrentTime();
-                if (currentTime < 2) { // Biasanya iklan ada di awal video
-                    muteIfAdIsPlaying();
-                } else {
-                    clearInterval(adCheckInterval);
-                }
-            }, 1000);
-        }
-
-        // Fungsi untuk mute jika iklan sedang diputar
-        function muteIfAdIsPlaying() {
-            player.mute();
-            attemptSkipAd();
-            document.getElementById('skip-ad-button').style.display = 'block'; // Tampilkan tombol Skip Ad
-        }
-
-        // Fungsi untuk unmute jika iklan sudah dilewati
-        function unmuteIfAdIsSkipped() {
-            const currentTime = player.getCurrentTime();
-            if (currentTime > 5) { // Biasanya iklan selesai sebelum 5 detik
-                player.unMute();
-                document.getElementById('skip-ad-button').style.display = 'none'; // Sembunyikan tombol Skip Ad
-            }
-        }
-
         // Fungsi untuk mencoba mengklik tombol "Skip Ad"
         function attemptSkipAd() {
             const skipButton = document.querySelector('.ytp-ad-skip-button');
             if (skipButton) {
                 skipButton.click();
-                player.unMute();
                 document.getElementById('skip-ad-button').style.display = 'none'; // Sembunyikan tombol Skip Ad
             }
         }
