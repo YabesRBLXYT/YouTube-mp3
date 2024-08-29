@@ -13,16 +13,16 @@
         .youtube-audio-player {
             position: relative;
             overflow: hidden;
-            width: 100px;  /* Lebar krop */
-            height: 30px;  /* Tinggi krop */
+            width: 80px;  /* Lebar krop sesuai dengan tombol "Skip Ad" di mobile */
+            height: 35px;  /* Tinggi krop sesuai dengan tombol "Skip Ad" di mobile */
             margin: 20px auto;
             border-radius: 5px;
             box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
         }
         #ytplayer {
             position: absolute;
-            top: -440px; /* Atur posisi Y untuk menampilkan tombol skip ad */
-            left: -500px; /* Atur posisi X untuk menampilkan tombol skip ad */
+            top: -150px;  /* Atur posisi Y untuk menyesuaikan dengan posisi "Skip Ad" di mobile */
+            left: -400px;  /* Atur posisi X untuk menyesuaikan dengan posisi "Skip Ad" di mobile */
             width: 1280px;  /* Lebar asli video */
             height: 720px;  /* Tinggi asli video */
             border: none;
@@ -146,48 +146,58 @@
             window.location.hash = nextVideo.hash; // Update hash URL
         }
 
-        // Fungsi untuk memuat tautan dari links.json
-        fetch('links.json')
-            .then(response => response.json())
-            .then(data => {
-                const videoList = document.getElementById('video-list');
-                videos = data.videos;
+        // Data links.json dalam bentuk inline
+        const linksData = {
+            "videos": [
+                { "name": "Video 1", "hash": "#video1", "id": "your-video-id-1" },
+                { "name": "Video 2", "hash": "#video2", "id": "your-video-id-2" },
+                { "name": "Video 3", "hash": "#video3", "id": "your-video-id-3" }
+            ]
+        };
 
-                // Membuat daftar tautan berdasarkan links.json
-                videos.forEach(video => {
-                    const listItem = document.createElement('li');
-                    const link = document.createElement('a');
-                    link.href = video.hash;
-                    link.textContent = video.name;
-                    link.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        currentIndex = videos.findIndex(v => v.hash === video.hash);
-                        playVideo(video.id);
-                    });
-                    listItem.appendChild(link);
-                    videoList.appendChild(listItem);
+        // Fungsi untuk memuat tautan dari linksData
+        function loadVideoLinks() {
+            const videoList = document.getElementById('video-list');
+            videos = linksData.videos;
+
+            // Membuat daftar tautan berdasarkan links.json
+            videos.forEach(video => {
+                const listItem = document.createElement('li');
+                const link = document.createElement('a');
+                link.href = video.hash;
+                link.textContent = video.name;
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    currentIndex = videos.findIndex(v => v.hash === video.hash);
+                    playVideo(video.id);
                 });
-
-                // Memeriksa hash saat halaman dimuat
-                const currentHash = window.location.hash;
-                if (currentHash) {
-                    const video = videos.find(v => v.hash === currentHash);
-                    if (video) {
-                        currentIndex = videos.indexOf(video);
-                        playVideo(video.id);
-                    }
-                }
-
-                // Memeriksa hash saat berubah
-                window.addEventListener('hashchange', () => {
-                    const newHash = window.location.hash;
-                    const video = videos.find(v => v.hash === newHash);
-                    if (video) {
-                        currentIndex = videos.indexOf(video);
-                        playVideo(video.id);
-                    }
-                });
+                listItem.appendChild(link);
+                videoList.appendChild(listItem);
             });
+
+            // Memeriksa hash saat halaman dimuat
+            const currentHash = window.location.hash;
+            if (currentHash) {
+                const video = videos.find(v => v.hash === currentHash);
+                if (video) {
+                    currentIndex = videos.indexOf(video);
+                    playVideo(video.id);
+                }
+            }
+
+            // Memeriksa hash saat berubah
+            window.addEventListener('hashchange', () => {
+                const newHash = window.location.hash;
+                const video = videos.find(v => v.hash === newHash);
+                if (video) {
+                    currentIndex = videos.indexOf(video);
+                    playVideo(video.id);
+                }
+            });
+        }
+
+        // Panggil fungsi untuk memuat tautan video
+        loadVideoLinks();
     </script>
 </body>
 </html>
