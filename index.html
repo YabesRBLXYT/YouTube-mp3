@@ -13,18 +13,18 @@
         .youtube-audio-player {
             position: relative;
             overflow: hidden;
-            width: 80px;  /* Lebar krop sesuai dengan tombol "Skip Ad" di mobile */
-            height: 35px;  /* Tinggi krop sesuai dengan tombol "Skip Ad" di mobile */
+            width: 80px;
+            height: 35px;
             margin: 20px auto;
             border-radius: 5px;
             box-shadow: 0px 0px 10px rgba(0,0,0,0.3);
         }
         #ytplayer {
             position: absolute;
-            top: -150px;  /* Atur posisi Y untuk menyesuaikan dengan posisi "Skip Ad" di mobile */
-            left: -400px;  /* Atur posisi X untuk menyesuaikan dengan posisi "Skip Ad" di mobile */
-            width: 1280px;  /* Lebar asli video */
-            height: 720px;  /* Tinggi asli video */
+            top: -150px;
+            left: -400px;
+            width: 1280px;
+            height: 720px;
             border: none;
         }
         ul {
@@ -66,12 +66,10 @@
         <div id="progress-bar"></div>
     </div>
 
-    <!-- Div untuk YouTube Player -->
     <div class="youtube-audio-player">
         <div id="ytplayer"></div>
     </div>
 
-    <!-- Load YouTube IFrame API -->
     <script src="https://www.youtube.com/iframe_api"></script>
     <script>
         let player;
@@ -79,12 +77,10 @@
         let currentIndex = 0;
         let progressBarInterval;
 
-        // Memuat YouTube IFrame API
         function onYouTubeIframeAPIReady() {
-            // Player akan diinisialisasi saat hash URL berubah
+            loadVideoLinks();
         }
 
-        // Fungsi untuk memperbarui progres bar
         function updateProgressBar() {
             if (player && player.getDuration) {
                 const duration = player.getDuration();
@@ -94,7 +90,6 @@
             }
         }
 
-        // Fungsi untuk memutar video YouTube
         function playVideo(videoId) {
             if (player) {
                 player.loadVideoById(videoId);
@@ -123,7 +118,6 @@
             startProgressBar();
         }
 
-        // Fungsi untuk memulai progres bar
         function startProgressBar() {
             if (progressBarInterval) {
                 clearInterval(progressBarInterval);
@@ -131,36 +125,25 @@
             progressBarInterval = setInterval(updateProgressBar, 1000);
         }
 
-        // Fungsi untuk menangani perubahan status player
         function handleStateChange(event) {
             if (event.data === YT.PlayerState.ENDED) {
                 playNextVideo();
             }
         }
 
-        // Fungsi untuk memutar video berikutnya
         function playNextVideo() {
             currentIndex = (currentIndex + 1) % videos.length;
             const nextVideo = videos[currentIndex];
             playVideo(nextVideo.id);
-            window.location.hash = nextVideo.hash; // Update hash URL
+            window.location.hash = nextVideo.hash;
         }
 
-        // Data links.json dalam bentuk inline
-        const linksData = {
-            "videos": [
-                { "name": "Video 1", "hash": "#video1", "id": "your-video-id-1" },
-                { "name": "Video 2", "hash": "#video2", "id": "your-video-id-2" },
-                { "name": "Video 3", "hash": "#video3", "id": "your-video-id-3" }
-            ]
-        };
-
-        // Fungsi untuk memuat tautan dari linksData
-        function loadVideoLinks() {
+        async function loadVideoLinks() {
+            const response = await fetch('links.json');
+            const data = await response.json();
+            videos = data.videos;
             const videoList = document.getElementById('video-list');
-            videos = linksData.videos;
 
-            // Membuat daftar tautan berdasarkan links.json
             videos.forEach(video => {
                 const listItem = document.createElement('li');
                 const link = document.createElement('a');
@@ -168,36 +151,19 @@
                 link.textContent = video.name;
                 link.addEventListener('click', function(e) {
                     e.preventDefault();
-                    currentIndex = videos.findIndex(v => v.hash === video.hash);
                     playVideo(video.id);
                 });
                 listItem.appendChild(link);
                 videoList.appendChild(listItem);
             });
 
-            // Memeriksa hash saat halaman dimuat
-            const currentHash = window.location.hash;
-            if (currentHash) {
-                const video = videos.find(v => v.hash === currentHash);
-                if (video) {
-                    currentIndex = videos.indexOf(video);
-                    playVideo(video.id);
-                }
+            // Load the first video by default
+            if (videos.length > 0) {
+                playVideo(videos[0].id);
+                window.location.hash = videos[0].hash;
             }
-
-            // Memeriksa hash saat berubah
-            window.addEventListener('hashchange', () => {
-                const newHash = window.location.hash;
-                const video = videos.find(v => v.hash === newHash);
-                if (video) {
-                    currentIndex = videos.indexOf(video);
-                    playVideo(video.id);
-                }
-            });
         }
-
-        // Panggil fungsi untuk memuat tautan video
-        loadVideoLinks();
     </script>
 </body>
 </html>
+
